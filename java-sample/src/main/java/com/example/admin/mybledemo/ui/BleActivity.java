@@ -32,10 +32,12 @@ import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Button;
 
 import com.example.admin.mybledemo.BleRssiDevice;
 import com.example.admin.mybledemo.R;
 import com.example.admin.mybledemo.adapter.ScanAdapter;
+import com.example.admin.mybledemo.ui.CarAndRfidActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -68,6 +70,7 @@ public class BleActivity extends AppCompatActivity {
     private Ble<BleRssiDevice> ble = Ble.getInstance();
     private ObjectAnimator animator;
     private boolean isFilter = false;
+    private Button btnNewBlank;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -98,6 +101,7 @@ public class BleActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         floatingActionButton = findViewById(R.id.floatingButton);
         filterView = findViewById(R.id.filterView);
+        btnNewBlank = findViewById(R.id.btn_new_blank);
     }
 
     private void initLinsenter() {
@@ -135,6 +139,13 @@ public class BleActivity extends AppCompatActivity {
             public void onRefresh() {
                 swipeLayout.setRefreshing(false);
                 rescan();
+            }
+        });
+        btnNewBlank.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BleActivity.this, CarAndRfidActivity.class);
+                startActivity(intent);
             }
         });
 

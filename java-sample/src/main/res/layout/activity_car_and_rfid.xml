@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:id="@+id/tv_car_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="小车未连接"
+        android:textSize="18sp"
+        android:textColor="#333333"
+        android:layout_marginTop="40dp"/>
+
+    <TextView
+        android:id="@+id/tv_rfid_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RFID未连接"
+        android:textSize="18sp"
+        android:textColor="#333333"
+        android:layout_marginTop="20dp"/>
+
+    <Button
+        android:id="@+id/btn_car_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="小车操作"
+        android:layout_marginTop="40dp"/>
+
+    <Button
+        android:id="@+id/btn_rfid_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RFID操作"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/tv_car_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="小车回传数据："
+        android:textSize="16sp"
+        android:textColor="#006600"
+        android:layout_marginTop="40dp"/>
+
+    <TextView
+        android:id="@+id/tv_rfid_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RFID回传数据："
+        android:textSize="16sp"
+        android:textColor="#006600"
+        android:layout_marginTop="20dp"/>
+
+</LinearLayout>
+
