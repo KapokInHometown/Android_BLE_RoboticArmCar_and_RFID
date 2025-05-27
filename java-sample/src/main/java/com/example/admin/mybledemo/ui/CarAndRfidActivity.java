@@ -1,15 +1,19 @@
 package com.example.admin.mybledemo.ui;
 
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Button;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.admin.mybledemo.R;
 import com.example.admin.mybledemo.Utils;
+import com.example.admin.mybledemo.adapter.DeviceInfoAdapter;
 
 import cn.com.heaton.blelibrary.ble.Ble;
 import cn.com.heaton.blelibrary.ble.BleLog;
@@ -22,6 +26,7 @@ import cn.com.heaton.blelibrary.ble.callback.BleWriteCallback;
 import cn.com.heaton.blelibrary.ble.model.BleDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,6 +58,12 @@ public class CarAndRfidActivity extends AppCompatActivity {
     private boolean carFound = false;
     private boolean rfidFound = false;
 
+    private ActionBar actionBar;
+
+    private DeviceInfoAdapter adapter;
+
+    private List<BluetoothGattService> gattServices;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,15 +75,23 @@ public class CarAndRfidActivity extends AppCompatActivity {
         btnCarAction = findViewById(R.id.btn_car_action);
         btnRfidAction = findViewById(R.id.btn_rfid_action);
         ble = Ble.getInstance();
+        gattServices = new ArrayList<>();
+        adapter = new DeviceInfoAdapter(this, gattServices);
         startScanAndConnect();
         btnCarAction.setOnClickListener(v -> {
             // 发送指令1：小车+RFID
-            sendCmdToCar("233030335031303030543035303021");
-            sendCmdToRfid("BB00220000227E");
+            handler.post(() -> sendCmdToCar("233030365031303030543030303021"));
+            handler.postDelayed(() -> sendCmdToCar("233030375031373030543030303021"), 300);
+            handler.postDelayed(() -> sendCmdToCar("233030385031303030543030303021"), 600);
+            handler.postDelayed(() -> sendCmdToCar("233030395031333030543030303021"), 900);
         });
         btnRfidAction.setOnClickListener(v -> {
             // 发送指令2：只小车
-            sendCmdToCar("233030335031353030543035303021");
+            handler.post(() -> sendCmdToCar("233030365031353030543030303021"));
+            handler.postDelayed(() -> sendCmdToCar("233030375031353030543030303021"), 300);
+            handler.postDelayed(() -> sendCmdToCar("233030385031353030543030303021"), 600);
+            handler.postDelayed(() -> sendCmdToCar("233030395031353030543030303021"), 900);
+
         });
     }
 
@@ -108,46 +127,22 @@ public class CarAndRfidActivity extends AppCompatActivity {
         }
     };
 
-    public void onReady(BleDevice device) {
 
-        BleLog.i("DeviceInfoActivity", "2");
 
-        //设置MTU长度，以免设备回传长度超过20字节被自动丢弃
-        ble.setMTU(ble.getConnectedDevices().get(0).getBleAddress(), 96, new BleMtuCallback<BleDevice>() {
-            @Override
-            public void onMtuChanged(BleDevice device, int mtu, int status) {
-                super.onMtuChanged(device, mtu, status);
-                Utils.showToast("最大支持MTU：" + mtu);
-            }
-        });
+    private BleConnectCallback<BleDevice> connectCallback = new BleConnectCallback<BleDevice>() {
+//        @Override
+//        public void onConnectionChanged(BleDevice device) {
+//            Log.e("DeviceInfoActivity", "onConnectionChanged: " + device.getConnectionState()+Thread.currentThread().getName());
+//            if (device.isConnected()) {
+//                actionBar.setSubtitle("已连接");
+//            }else if (device.isConnecting()){
+//                actionBar.setSubtitle("连接中...");
+//            }
+//            else if (device.isDisconnected()){
+//                actionBar.setSubtitle("未连接");
+//            }
+//        }
 
-        BleLog.i("DeviceInfoActivity", "3");
-
-        //连接成功后，设置通知
-        ble.enableNotify(device, true, new BleNotifyCallback<BleDevice>() {
-            @Override
-            public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
-                BleLog.i("DeviceInfoActivity", "4");
-                UUID uuid = characteristic.getUuid();
-                BleLog.e("DeviceInfoActivity", "onChanged==uuid:" + uuid.toString());
-                BleLog.e("DeviceInfoActivity", "onChanged==data:" + ByteUtils.toHexString(characteristic.getValue()));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Utils.showToast(String.format("收到设备通知数据: %s", ByteUtils.toHexString(characteristic.getValue())));
-                    }
-                });
-            }
-
-            @Override
-            public void onNotifySuccess(BleDevice device) {
-                super.onNotifySuccess(device);
-                BleLog.e("DeviceInfoActivity", "onNotifySuccess: "+device.getBleName());
-            }
-        });
-    }
-
-    private final BleConnectCallback<BleDevice> connectCallback = new BleConnectCallback<BleDevice>() {
         @Override
         public void onConnectionChanged(BleDevice device) {
             runOnUiThread(() -> {
@@ -169,16 +164,17 @@ public class CarAndRfidActivity extends AppCompatActivity {
                     }
                 }
             });
-            // 连接成功后自动开启通知监听
-            if (device.isConnected()) {
-                BleLog.i("DeviceInfoActivity", "1");
-
-                onReady(device);
-
-                BleLog.i("DeviceInfoActivity", "11");
-
-            }
+//            // 连接成功后自动开启通知监听
+//            if (device.isConnected()) {
+//                BleLog.i("DeviceInfoActivity", "1");
+//
+//                ConnectReady(device);
+//
+//                BleLog.i("DeviceInfoActivity", "11");
+//
+//            }
         }
+
         @Override
         public void onConnectFailed(BleDevice device, int errorCode) {
             runOnUiThread(() -> {
@@ -189,6 +185,88 @@ public class CarAndRfidActivity extends AppCompatActivity {
                 }
             });
         }
+
+        public void ConnectReady(BleDevice device) {
+
+            BleLog.i("DeviceInfoActivity", "2");
+
+            //设置MTU长度，以免设备回传长度超过20字节被自动丢弃
+            ble.setMTU(ble.getConnectedDevices().get(0).getBleAddress(), 96, new BleMtuCallback<BleDevice>() {
+                @Override
+                public void onMtuChanged(BleDevice device, int mtu, int status) {
+                    super.onMtuChanged(device, mtu, status);
+                    Utils.showToast("最大支持MTU：" + mtu);
+                }
+            });
+
+            BleLog.i("DeviceInfoActivity", "3");
+
+            //连接成功后，设置通知
+            ble.enableNotify(device, true, new BleNotifyCallback<BleDevice>() {
+                @Override
+                public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
+                    BleLog.i("DeviceInfoActivity", "4");
+                    UUID uuid = characteristic.getUuid();
+                    BleLog.e("DeviceInfoActivity", "onChanged==uuid:" + uuid.toString());
+                    BleLog.e("DeviceInfoActivity", "onChanged==data:" + ByteUtils.toHexString(characteristic.getValue()));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Utils.showToast(String.format("收到设备通知数据: %s", ByteUtils.toHexString(characteristic.getValue())));
+                        }
+                    });
+                }
+
+                @Override
+                public void onNotifySuccess(BleDevice device) {
+                    BleLog.i("DeviceInfoActivity", "44");
+                    super.onNotifySuccess(device);
+                    BleLog.i("DeviceInfoActivity", "55");
+                    BleLog.e("DeviceInfoActivity", "onNotifySuccess: "+device.getBleName());
+                }
+
+                @Override
+                public void onNotifyFailed(BleDevice device, int failedCode) {
+                    BleLog.i("DeviceInfoActivity", "444");
+                    super.onNotifyFailed(device, failedCode);
+                    BleLog.i("DeviceInfoActivity", "555");
+                    BleLog.e("DeviceInfoActivity", "onNotifyFailed: "+failedCode);
+                }
+
+            });
+            BleLog.i("DeviceInfoActivity", "4444");
+        }
+
+        public void StartNotify(BleDevice device) {
+            if (device.isConnected()) {
+                    BleLog.i("DeviceInfoActivity", "1");
+
+                    ConnectReady(device);
+
+                    BleLog.i("DeviceInfoActivity", "11");
+
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BleDevice device, BluetoothGatt gatt) {
+            super.onServicesDiscovered(device, gatt);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    BleLog.i("DeviceInfoActivity", "onServicesDiscovered1");
+                    gattServices.addAll(gatt.getServices());
+                    BleLog.i("DeviceInfoActivity", "onServicesDiscovered2");
+                    adapter.notifyDataSetChanged();
+                    BleLog.i("DeviceInfoActivity", "onServicesDiscovered3");
+                    StartNotify(device);
+                    BleLog.i("DeviceInfoActivity", "onServicesDiscovered4");
+                }
+            });
+
+        }
+
     };
 
     private void sendCmdToCar(String hex) {

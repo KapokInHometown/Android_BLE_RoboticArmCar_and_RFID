@@ -1,6 +1,7 @@
 package cn.com.heaton.blelibrary.ble.request;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
 
 import java.util.UUID;
 
